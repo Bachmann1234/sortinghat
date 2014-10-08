@@ -3,10 +3,12 @@ import random
 import wave
 import time
 import pyaudio
+import serial
+import sys
 
 CHUNK = 1024
 
-BASE_AUDIO_DIR = "audio"
+BASE_AUDIO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio")
 
 WAIT_TIME = .25
 
@@ -63,22 +65,22 @@ def play_sound(sound_file_path):
     :param sound_file_path:
         string path
     """
-    with wave.open(sound_file_path, 'rb') as wf:
-        p = pyaudio.PyAudio()
+    wf = wave.open(sound_file_path, 'rb')
+    p = pyaudio.PyAudio()
 
-        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                        channels=wf.getnchannels(),
-                        rate=wf.getframerate(),
-                        output=True)
+    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+    data = wf.readframes(CHUNK)
+    while data:
+        stream.write(data)
         data = wf.readframes(CHUNK)
-        while data:
-            stream.write(data)
-            data = wf.readframes(CHUNK)
-        stream.stop_stream()
-        p.terminate()
+    stream.stop_stream()
+    p.terminate()
+    wf.close()
 
-if __name__ == '__main__':
-
+def generate_script():
     # Consider some stalling lines
     script = list_all_sound_files('stalling')
     random.shuffle(script)
@@ -92,7 +94,24 @@ if __name__ == '__main__':
 
     # Pick a house
     script.append(get_random_wav_file('houses'))
+    return script    
 
+def play_script(script):
     for sound in script:
         play_sound(sound)
-        time.sleep(WAIT_TIME)
+        time.sleep(WAIT_TIME)    
+
+if __name__ == '__main__':
+    # If a port was passed in we must be using a external device to trigger the
+    # script. Read from the device serial port
+    if len(sys.argv) > 1:
+        running = False
+        ser = serial.Serial(sys.argv[1], 115200)
+        while 1: 
+            if ser.readline().strip() == 'YEP':
+                running = True
+                play_script(generate_script())
+                while ser.readline().strip() == 'YEP':
+                    continue
+    else:
+        play_script(generate_script())
