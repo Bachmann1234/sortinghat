@@ -5,6 +5,7 @@ import time
 import pyaudio
 import serial
 import sys
+import collections
 
 CHUNK = 1024
 
@@ -80,6 +81,7 @@ def play_sound(sound_file_path):
     p.terminate()
     wf.close()
 
+
 def generate_script():
     # Consider some stalling lines
     script = list_all_sound_files('stalling')
@@ -96,22 +98,38 @@ def generate_script():
     script.append(get_random_wav_file('houses'))
     return script    
 
+
 def play_script(script):
     for sound in script:
         play_sound(sound)
         time.sleep(WAIT_TIME)    
 
+
+def monitor_serial():
+    running = False
+    ser = serial.Serial(sys.argv[1], 115200)
+    threshold = 1000
+    if len(sys.argv) > 2:
+        threshold = int(sys.argv[2])
+    readings = collections.deque(maxlen=3)
+    while 1:
+        reading = ser.readline().strip()
+        if reading:
+            readings.appendleft(int(reading))
+            print(readings)
+            samples_average_above_threshold = (
+                float(sum(readings))/float(len(readings)) > threshold
+            )
+            if samples_average_above_threshold and not running:
+                running = True
+                play_script(generate_script())
+            if not samples_average_above_threshold:
+                running = False
+
 if __name__ == '__main__':
     # If a port was passed in we must be using a external device to trigger the
     # script. Read from the device serial port
     if len(sys.argv) > 1:
-        running = False
-        ser = serial.Serial(sys.argv[1], 115200)
-        while 1: 
-            if ser.readline().strip() == 'YEP':
-                running = True
-                play_script(generate_script())
-                while ser.readline().strip() == 'YEP':
-                    continue
+        monitor_serial()
     else:
         play_script(generate_script())
