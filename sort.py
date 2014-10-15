@@ -112,7 +112,7 @@ def monitor_serial():
     if len(sys.argv) > 2:
         threshold = int(sys.argv[2])
     readings = collections.deque(maxlen=3)
-    while 1:
+    while True:
         reading = ser.readline().strip()
         if reading:
             readings.appendleft(int(reading))
