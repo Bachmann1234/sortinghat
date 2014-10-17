@@ -108,23 +108,19 @@ def play_script(script):
 def monitor_serial():
     running = False
     ser = serial.Serial(sys.argv[1], 115200)
-    threshold = 1000
-    if len(sys.argv) > 2:
-        threshold = int(sys.argv[2])
     readings = collections.deque(maxlen=3)
     while True:
         reading = ser.readline().strip()
         if reading:
             readings.appendleft(int(reading))
-            print(readings)
-            samples_average_above_threshold = (
-                float(sum(readings))/float(len(readings)) > threshold
-            )
-            if samples_average_above_threshold and not running:
+            if any(readings):
+                print(readings)
+            else:
+                running = False
+            trigger = all(readings)
+            if(all(readings)) and not running:
                 running = True
                 play_script(generate_script())
-            if not samples_average_above_threshold:
-                running = False
 
 if __name__ == '__main__':
     # If a port was passed in we must be using a external device to trigger the
