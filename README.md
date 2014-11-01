@@ -48,7 +48,8 @@ Pictures:
 	![Hat](photos/hat.jpg?raw=true "Hat")
 	![Inside](photos/inside.jpg?raw=true "Inside")
 
+Sewing job left something to be desired but it worked pretty well.
 
-Sew the ribbon around the band of the hat and the Flora inside of the hat. Connect the ribbon and pin D9 on the Flora by sewing the conductive thread. If done correctly you should be able to upload the hatsensor.ino code to the Flora using the Arduino IDE.
+Sew the ribbon around the band of the hat and the Flora inside of the hat. Connect the ribbon and pin D9 on the Flora by sewing the conductive thread. Connect a second ribbon to pin 3.3v. Keep the ribbons close together but not touching. Someone putting the hat on will complete the circuit. If done correctly you should be able to upload the hatsensor.ino code to the Flora using the Arduino IDE.
 
 If you are unfamiliar with Flora or Arduino I suggest checking out https://learn.adafruit.com/
